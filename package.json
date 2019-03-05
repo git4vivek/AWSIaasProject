@@ -1,0 +1,23 @@
+{
+  "name": "objectrecognition",
+  "version": "1.0.0",
+  "description": "Object Recognition for CSE546",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cloud",
+    "computing",
+    "deep",
+    "learning",
+    "object",
+    "recognition",
+    "video",
+    "analysis"
+  ],
+  "author": "Anique Tahir",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}
