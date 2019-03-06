@@ -3,7 +3,20 @@
 ## Configuration
 
 1. Install node/npm
-2. Store credentials in `~/.aws/credentials` file
+2. Store AWS credentials in `~/.aws/credentials` file
+
+Example of credentials file:
+```
+[default]
+aws_access_key_id = <YOUR_ACCESS_KEY_ID>
+aws_secret_access_key = <YOUR_SECRET_ACCESS_KEY>
+```
+
+## Installation
+The following command will install all dependancies:
+```
+npm install
+```
 
 ## Running 
 You can use the following command to start the server
