@@ -27,14 +27,20 @@ app.get('/', (req, res)=>{
 
         let filename = filename_kv[1].split("\"").join("");
 
+
+        let vh = new VideoHandler(filename, vid_res);
+
         // Send Video to app server for processing
+        vh.processVideo((results)=>{
+            // Send Results to client
+            res.send(results);
 
-        // Send Results to client
+            // Save Results on S3
+            vh.uploadResults(results);
 
-        // Save Results on S3
+        });
 
-
-        res.send('boop');
+        //res.send('boop');
     });
 
     //res.send("Hello");
