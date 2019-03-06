@@ -15,7 +15,6 @@ const video_url = `http://${rpi_cluster_ip}/getvideo/`;
 app.get('/', (req, res)=>{
     console.log("Getting video from the RPi cluster...");
     http.get(video_url, (vid_res)=>{
-        console.log(vid_res);
 
         // Try to get filename from the video
         let content_disposition = vid_res.headers["content-disposition"];
