@@ -26,7 +26,6 @@ app.get('/', (req, res)=>{
 
         let filename = filename_kv[1].split("\"").join("");
 
-
         let vh = new VideoHandler(filename, vid_res);
 
         // Send Video to app server for processing
