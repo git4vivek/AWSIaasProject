@@ -23,9 +23,10 @@ class VideoDetect{
             video: video_name
         };
         this.rek = new AWS.Rekognition({region: 'us-west-2'});
+        this.labels = {};
     }
 
-    main(){
+    main(cb){
         let params = {
             Video: { /* required */
                 S3Object: {
@@ -42,16 +43,17 @@ class VideoDetect{
         this.rek.startLabelDetection(params, (err, data) => {
             if(err){
                 console.error(err, err.stack);
+                cb('Failed to start Label detection')
             }else{
                 this.jobId = data['JobId'];
                 console.log(`Started Rekognition job with JobID: ${this.jobId}`);
-                this.pollResults();
+                this.pollResults(cb);
             }
         });
 
     }
 
-    waitForJobFinish(cb){
+    waitForJobFinish(){
         const sqs = new AWS.SQS({region: 'us-west-2'});
 
         const sqs_params = {
@@ -70,12 +72,13 @@ class VideoDetect{
                     rej(err);
                 }else{
                     if(_.isNil(data['Messages'])){
-                        rej();
+                        rej('No messages');
+                        return;
                     }
                     data['Messages'].forEach((message)=>{
                         try {
                             let notification = JSON.parse(message['Body']);
-                            let rekMessage = JSON.parse(notification['Message']);
+                            let rekMessage = notification;
                             console.log(rekMessage['JobId']);
                             console.log(rekMessage['Status']);
                             if (rekMessage['JobId'] === this.jobId) {
@@ -88,7 +91,7 @@ class VideoDetect{
 
                                 res();
                             } else {
-                                rej();
+                                rej('wrong job id');
                                 console.log(`Job did't match: ${rekMessage['JobId']}:${this.jobId}`);
                             }
 
@@ -97,8 +100,8 @@ class VideoDetect{
                                 ReceiptHandle: message['ReceiptHandle']
                             });
                         }catch (e) {
-                            console.log('Read irrelevant message');
-                            rej();
+                            //console.log('Read irrelevant message');
+                            rej(e);
                         }
                     })
                 }
@@ -108,7 +111,7 @@ class VideoDetect{
 
     }
 
-    pollResults(dotLine=0){
+    pollResults(cb){
         const sqs = new AWS.SQS({region: 'us-west-2'});
         let jobFound = false;
         const sqs_params = {
@@ -119,69 +122,30 @@ class VideoDetect{
                 /* more items */
             ],
         };
-
-        let jobFoundPromise = new Promise((res, rej)=>{
-            sqs.receiveMessage(sqs_params, (err, data) => {
-                if(err){
-                    console.log('Failed to receive sqs message');
-                    rej(err);
-                }else{
-                    let prompt = '';
-                    if(_.isNil(data['Messages'])){
-                        if(dotLine<20){
-                            prompt += '.';
-                            dotLine++;
-                        }else{
-                            prompt += '\n';
-                            dotLine = 0;
-                        }
-                        console.log(prompt);
-                        return;
-                    }
-                    data['Messages'].forEach((message)=>{
-                        try {
-                            let notification = JSON.parse(message['Body']);
-                            let rekMessage = JSON.parse(notification['Message']);
-                            console.log(rekMessage['JobId']);
-                            console.log(rekMessage['Status']);
-                            if (rekMessage['JobId'] === this.jobId) {
-                                console.log('Matching Job Found: ' + this.jobId);
-                                jobFound = true;
-
-                                this.getResultsLabels();
-
-                                sqs.deleteMessage({
-                                    QueueUrl: this.options.queueUrl,
-                                    ReceiptHandle: message['ReceiptHandle']
-                                });
-                            } else {
-                                console.log(`Job did't match: ${rekMessage['JobId']}:${this.jobId}`);
-                            }
-
-                            sqs.deleteMessage({
-                                QueueUrl: this.options.queueUrl,
-                                ReceiptHandle: message['ReceiptHandle']
-                            });
-                        }catch (e) {
-                            console.log('Read irrelevant message');
-                        }
-                    })
-                }
-
-                if(!jobFound){
-                    this.pollResults(dotLine);
-                }
-            });
+        let poller = promisePoller({
+            taskFn: this.waitForJobFinish.bind(this),
+            interval: 1000,
+            retries: 50
         });
+
+        poller.then(()=>{
+            this.getResultsLabels(()=>{
+                console.log(this.labels);
+                cb(this.labels);
+            });
+        }).catch((err)=>{
+            console.log('Polling SQS failed');
+            console.log(err);
+            cb("Err: Failed while polling for results from rekognition")
+        });
+
 
     }
 
-    getResultsLabels(){
+    getResultsLabels(cb, paginationToken='',finished=false){
         let maxResults = 10;
-        let paginationToken = '';
-        let finished = false;
 
-        while(!finished){
+        if(!finished){
             this.rek.getLabelDetection({
                 JobId: this.jobId,
                 MaxResults: maxResults,
@@ -199,6 +163,12 @@ class VideoDetect{
 
                     console.log("Timestamp: " + labelDetection['Timestamp'].toString());
                     console.log("   Label: " + label['Name']);
+                    if(_.isUndefined(this.labels[label['Name']])){
+                        this.labels[label['Name']] = parseFloat(label['Confidence'])
+                    }else{
+                        this.labels[label['Name']] = Math.max(this.labels[label['Name']], parseFloat(label['Confidence']));
+                    }
+
                     console.log("   Confidence: " +  label['Confidence'].toString());
                     console.log("   Instances:");
 
@@ -225,6 +195,12 @@ class VideoDetect{
                     }
 
                 });
+
+                if(!finished) {
+                    this.getResultsLabels(cb, paginationToken, finished);
+                }else{
+                    cb();
+                }
             });
 
 
@@ -296,22 +272,29 @@ class VideoHandler{
                 };
                 let s3promise = new AWS.S3().putObject(s3VideoParams).promise();
                 s3promise.then(
-                    (data)=>console.log(`The video ${local_file_path} was uploaded to S3`)
+                    (data)=>{
+                        console.log(`The video ${local_file_path} was uploaded to S3`);
+                        // Process video on rekognition
+
+                        let vd = new VideoDetect(local_file_path);
+                        vd.main((labels)=>{
+                           cb(JSON.stringify(labels, null, 4));
+                        });
+
+                    }
                 ).catch(
                     (err)=>{
                         console.error(err,err.stack);
+                        cb("Err: Failed to store video on S3")
                     }
                 );
 
-
-                let results = 'object';
-
-                // provide results to callback function
-                cb(results);
-
             }).catch((err)=>{
                 console.log(err);
+                cb("Err: Failed to convert file format")
             });
+        }).catch((err)=>{
+            cb("Failed. Instance File System Failure")
         });
 
 
