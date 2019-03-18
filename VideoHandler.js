@@ -125,7 +125,7 @@ class VideoDetect{
         let poller = promisePoller({
             taskFn: this.waitForJobFinish.bind(this),
             interval: 1000,
-            retries: 50
+            retries: 200
         });
 
         poller.then(()=>{
@@ -226,6 +226,7 @@ class VideoHandler{
 
             this.local_file.on('error', (err)=>{
                 rej(err);
+                console.log(err);
             });
         });
     }
@@ -294,6 +295,7 @@ class VideoHandler{
                 cb("Err: Failed to convert file format")
             });
         }).catch((err)=>{
+            console.log(err);
             cb("Failed. Instance File System Failure")
         });
 
