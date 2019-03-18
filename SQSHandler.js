@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
-const promisePoller = require('promise-poller');
+const promisePoller = require('promise-poller').default;
 const uuid = require('uuid/v4');
+const _ = require('lodash');
 
 const REQUEST_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/204881055968/RequestQueue';
 const RESPONSE_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/204881055968/ResponseQueue';
@@ -91,7 +92,7 @@ class SQSHandler{
 
     getResult(cb){
         let poller = promisePoller({
-            taskFn: this.waitForJobFinish().bind(this),
+            taskFn: this.waitForJobFinish.bind(this),
             interval: 1000, // milliseconds
             retries: 200
         });
