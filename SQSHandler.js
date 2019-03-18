@@ -34,8 +34,7 @@ class SQSHandler{
                     }
                     data['Messages'].forEach((message)=>{
                         try {
-                            let notification = JSON.parse(message['Body']);
-                            let rekMessage = notification;
+                            let rekMessage = JSON.parse(message['Body']);
                             console.log(rekMessage['uuid']);
                             console.log(rekMessage['label']);
                             if (rekMessage['uuid'] === this.job_uuid) {
@@ -46,7 +45,7 @@ class SQSHandler{
                                     ReceiptHandle: message['ReceiptHandle']
                                 });
 
-                                res(rekMessage['label']);
+                                res(rekMessage);
                             } else {
                                 rej('wrong job id');
                                 console.log(`Job did't match: ${rekMessage['JobId']}:${this.job_uuid}`);
@@ -98,9 +97,9 @@ class SQSHandler{
         });
 
         poller.then((result)=>{
-            cb(result);
+            cb(null, result);
         }).catch((err)=>{
-            cb('Polling for results failed');
+            cb(err, null);
             console.log(err);
         });
     }

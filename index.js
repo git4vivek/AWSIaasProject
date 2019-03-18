@@ -1,6 +1,7 @@
 const http = require('http');
 const express =  require('express');
 const _ = require('lodash');
+const SQSHandler = require('./SQSHandler');
 
 const VideoHandler = require('./VideoHandler');
 
@@ -13,36 +14,30 @@ const video_url = `http://${rpi_cluster_ip}/getvideo/`;
 
 
 app.get('/', (req, res)=>{
-    console.log("Getting video from the RPi cluster...");
-    http.get(video_url, (vid_res)=>{
+    console.log("Putting a new request on the SQS");
+    let sqsh = new SQSHandler();
 
-        // Try to get filename from the video
-        let content_disposition = vid_res.headers["content-disposition"];
-        let content_disposition_kv = content_disposition.split(';').map((kv=>kv.trim().split('=')));
-
-        let filename_kv = content_disposition_kv.filter((kv)=>{
-            return kv[0].trim() === 'filename';
-        })[0];
-
-        let filename = filename_kv[1].split("\"").join("");
-
-
-        let vh = new VideoHandler(filename, vid_res);
-
-        // Send Video to app server for processing
-        vh.processVideo((results)=>{
-            // Send Results to client
-            res.send(results);
-
-            // Save Results on S3
-            vh.uploadResults(results);
-
-        });
-
-        //res.send('boop');
-    });
-
-    //res.send("Hello");
+    sqsh.createRequest().then(
+        (data)=>{
+            sqsh.getResult((err, result)=>{
+                if(err){
+                    console.log(err);
+                    res.send("Error: Failed Getting results");
+                }else {
+                    res.send(result['label']);
+                    console.log(`Result: ${result}`);
+                    let vh = new VideoHandler(result['video'], null);
+                    vh.uploadResults(result['label']);
+                }
+            });
+        }
+    ).catch(
+        (err)=>{
+            res.send("Error: SQS failure");
+            console.log("Failed to create an SQS request");
+            console.log(err);
+        }
+    );
 });
 
 app.listen(port, ()=>{
