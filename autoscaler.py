@@ -1,3 +1,6 @@
+## Python 3.7.2
+## Required package: boto3
+
 # keep track of count messages in slots of 1 minute for the past 5 mins
 # get max of the last 5 slots
 # if max > curr, create. 
@@ -60,12 +63,12 @@ def createInstances(count = 1):
         MaxCount=count,
         MinCount=1
     )
+    print ('creating ' + str(count) + ' instances')
  
 
 def getInstancesToDelete(currentInstances = None):
     #talk to DontDeleteQ
     #return instances not in DontDeleteQ
-    s = 1
 
     if currentInstances == None:
         currentInstances = getInstances()
@@ -92,15 +95,15 @@ while True:
     print ("slots", slots)
     print ("mvMaxOfMessages", mvMaxOfMessages)
     print ("currentInstanceCount", currentInstanceCount)
-    if mvMaxOfMessages > currentInstanceCount:
+    if mvMaxOfMessages > currentInstanceCount and currentInstanceCount < 20:
         #initCreate
         instancesToCreate = mvMaxOfMessages - currentInstanceCount if mvMaxOfMessages - currentInstanceCount < 20 else 20
         createInstances(instancesToCreate)
-        print ("initiating creation of " + str(instancesToCreate) + " instance")
-    elif currentInstanceCount > mvMaxOfMessages:
+        print ("initiating creation of " + str(instancesToCreate) + " instances")
+    elif mvMaxOfMessages < currentInstanceCount:
         #initDelete
         instancesToDelete = currentInstanceCount - mvMaxOfMessages
-        print ("initiating delete of " + str(instancesToDelete) + " instances here")
+        print ("initiating delete of " + str(instancesToDelete) + " instances")
         deleteInstances(currentInstances, instancesToDelete)
     else:
         print ("do nothing")
