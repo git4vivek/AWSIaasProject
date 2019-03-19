@@ -88,15 +88,16 @@ class AutoScaler:
         ## debug code until implemented
         if self.currentInstances == None:
             self.currentInstances = self.getInstances()
-        
-        return self.currentInstances
+
+        instancesToDelete = self.currentInstances
+        return instancesToDelete
 
 
     def deleteInstances(self, count):
+        ## update to ensure alteast one instance is kept and not deleted
         instanceList = self.getInstancesToDelete()
-        instanceList = instanceList[:count]
+        instanceList = instanceList[:count-1] #keep one free instance undeleted and ready to process
         print ("instances to delete: ", instanceList)
-        #ec2 = boto3.resource('ec2', region_name=region)
         self.ec2.instances.filter(InstanceIds = instanceList).terminate()
 
 
@@ -118,7 +119,7 @@ class AutoScaler:
                 instancesToCreate = mvMaxOfMessages - currentInstanceCount if mvMaxOfMessages - currentInstanceCount < 20 else 20
                 print ("initiating creation of " + str(instancesToCreate) + " instances")
                 self.createInstances(instancesToCreate)
-            elif mvMaxOfMessages < currentInstanceCount:
+            elif mvMaxOfMessages < currentInstanceCount and currentInstanceCount > 1:
                 ## initDelete
                 instancesToDelete = currentInstanceCount - mvMaxOfMessages
                 print ("initiating delete of " + str(instancesToDelete) + " instances")
