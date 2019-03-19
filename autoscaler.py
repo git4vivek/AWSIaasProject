@@ -57,7 +57,7 @@ def createInstances(count = 1):
     instance = ec2.create_instances(
         ImageId=amiId,
         InstanceType='t2.micro',
-        MaxCount=1,
+        MaxCount=count,
         MinCount=1
     )
  
@@ -94,8 +94,9 @@ while True:
     print ("currentInstanceCount", currentInstanceCount)
     if mvMaxOfMessages > currentInstanceCount:
         #initCreate
-        create
-        print ("initiate create of instance here")
+        instancesToCreate = mvMaxOfMessages - currentInstanceCount if mvMaxOfMessages - currentInstanceCount < 20 else 20
+        createInstances(instancesToCreate)
+        print ("initiating creation of " + str(instancesToCreate) + " instance")
     elif currentInstanceCount > mvMaxOfMessages:
         #initDelete
         instancesToDelete = currentInstanceCount - mvMaxOfMessages
