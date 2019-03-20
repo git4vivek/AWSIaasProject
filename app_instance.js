@@ -83,3 +83,5 @@ function findAndProcessRequests(){
 function main(){
     setInterval(findAndProcessRequests, 1000);
 }
+
+main();
