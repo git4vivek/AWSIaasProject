@@ -105,6 +105,48 @@ class SQSHandler{
         });
     }
 
+    getRequest(cb){
+        const sqs_params = {
+            QueueUrl: REQUEST_QUEUE_URL, /* required */
+            MaxNumberOfMessages: 1,
+            MessageAttributeNames: [
+                '.*',
+                /* more items */
+            ],
+        };
+        this.sqs.receiveMessage((err, data)=>{
+            if(err){
+                cb(err);
+            }else{
+                if(data['Messages'].length>0){
+                    let job_uuid = data['Messages'][0]['Body'].toString();
+                    cb(null, job_uuid);
+                }else{
+                    cb('No messages');
+                }
+            }
+        })
+    }
+
+    addResults(videoname, job_uuid, labels, cb){
+        const msgParams  = {
+            MessageBody: JSON.stringify({
+                video: videoname,
+                uuid: job_uuid,
+                label: labels
+            }),
+            QueueUrl: RESPONSE_QUEUE_URL
+        };
+        this.sqs.sendMessage(msgParams, (err, data)=>{
+            if(err){
+                console.log(err);
+                cb(err,null);
+            }else{
+                cb(null,data);
+            }
+        });
+    }
+
 }
 
 module.exports = SQSHandler;
