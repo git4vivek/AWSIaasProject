@@ -114,9 +114,11 @@ class SQSHandler{
                 /* more items */
             ],
         };
-        this.sqs.receiveMessage((err, data)=>{
+        console.log('Reading the request queue');
+        this.sqs.receiveMessage(sqs_params, (err, data)=>{
             if(err){
                 cb(err);
+                console.log(err);
             }else{
                 if(data['Messages'].length>0){
                     let job_uuid = data['Messages'][0]['Body'].toString();

@@ -32,6 +32,7 @@ function findAndProcessRequests(){
     sqsh.getRequest((request_err, request_data)=>{
         if(!request_err){
             let uuid = request_data;
+            console.log(`Processing request with uid: ${uuid}`);
             // If request is found
             let vh = new VideoHandler();
             // Get video from Raspberry Pi
