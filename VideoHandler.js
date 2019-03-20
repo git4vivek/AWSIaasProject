@@ -6,7 +6,7 @@ const fs = require('fs');
 const rpi_cluster_ip = '206.207.50.7';
 
 const video_url = `http://${rpi_cluster_ip}/getvideo/`;
-const BUCKET_NAME = 'cse546project1';
+const BUCKET_NAME = 'cse546demobucket';
 
 
 class VideoHandler{

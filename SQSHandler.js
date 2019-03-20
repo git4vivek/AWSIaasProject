@@ -3,8 +3,8 @@ const promisePoller = require('promise-poller').default;
 const uuid = require('uuid/v4');
 const _ = require('lodash');
 
-const REQUEST_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/204881055968/RequestQueue';
-const RESPONSE_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/204881055968/ResponseQueue';
+const REQUEST_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue';
+const RESPONSE_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/696521643480/ResponseQueue';
 
 class SQSHandler{
     constructor(){
