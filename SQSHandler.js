@@ -120,6 +120,10 @@ class SQSHandler{
                 cb(err);
                 console.log(err);
             }else{
+                if(_.isUndefined(data['Messages'])){
+                    cb("No Requests");
+                    return;
+                }
                 if(data['Messages'].length>0){
                     let job_uuid = data['Messages'][0]['Body'].toString();
                     cb(null, job_uuid);

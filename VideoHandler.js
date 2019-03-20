@@ -3,7 +3,7 @@ const AWS = require('aws-sdk');
 //const uuid = require('uuid');
 const fs = require('fs');
 
-
+const video_url = `http://${rpi_cluster_ip}/getvideo/`;
 const BUCKET_NAME = 'cse546project1';
 
 

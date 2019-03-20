@@ -10,7 +10,7 @@ const app = express();
 const port = 3000;
 
 const rpi_cluster_ip = '206.207.50.7';
-const video_url = `http://${rpi_cluster_ip}/getvideo/`;
+
 
 
 app.get('/', (req, res)=>{
