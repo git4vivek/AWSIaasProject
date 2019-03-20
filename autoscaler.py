@@ -41,6 +41,26 @@ class AutoScaler:
 
         return int(response['Attributes']['ApproximateNumberOfMessages'])
 
+    def getmessagesfromSQS(self, maxNumMessages):
+        message_bodies = []
+        messagelist = []
+        message_bodies = self.sqs.receive_message(
+            QueueUrl = self.dontDeleteQueueUrl,
+            AttributeNames = [
+                'SentTimestamp'
+            ],
+            MaxNumberOfMessages = maxNumMessages,
+            MessageAttributeNames=[
+                'All'
+            ],
+            VisibilityTimeout = 0,
+            WaitTimeSeconds = 0
+        )
+
+        for message in message_bodies['Messages']:
+            messagelist.append(message['Body'])
+        return messagelist
+
 
     def getInstances(self, states=['running']):
         ## get currently running instances
@@ -85,11 +105,15 @@ class AutoScaler:
         ## talk to DontDeleteQ
         ## return instances not in DontDeleteQ
 
+        ## response from DontDeleteQ
+        activeInstances = self.getmessagesfromSQS(10)
+        print("busy instances that will not be deleted: ", activeInstances)
+
         ## debug code until implemented
         if self.currentInstances == None:
             self.currentInstances = self.getInstances()
 
-        instancesToDelete = self.currentInstances
+        instancesToDelete = list(set(self.currentInstances) - set(activeInstances))
         return instancesToDelete
 
 
@@ -133,4 +157,4 @@ class AutoScaler:
             time.sleep(self.timeSlotDuration)
 
 
-a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = '', amiId = 'ami-0e355297545de2f82', timeSlotDuration=10)
+a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0e355297545de2f82', timeSlotDuration=10)
