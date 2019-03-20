@@ -19,6 +19,7 @@ class AutoScaler:
         self.amiId = amiId #'ami-0e355297545de2f82' #update with our AMI
         self.timeSlotDuration = timeSlotDuration #seconds
         self.region = region
+
         self.slots = deque([0, 0, 0, 0, 0])
         
         self.sqs = boto3.client('sqs', region_name=region)
@@ -75,6 +76,10 @@ class AutoScaler:
                 {
                     'Name': 'instance-state-name',
                     'Values': states
+                },
+                {
+                    'Name': 'tag:type',
+                    'Values': ['app_instance']
                 }
             ])
         
@@ -93,7 +98,18 @@ class AutoScaler:
                 ImageId = self.amiId,
                 InstanceType = 't2.micro',
                 MaxCount = count - currentlyCreatingInstances,
-                MinCount = 1
+                MinCount = 1,
+                TagSpecifications=[
+                    {
+                        'ResourceType': 'instance',
+                        'Tags': [
+                            {
+                                'Key': 'type',
+                                'Value': 'app_instance'
+                            }
+                        ]
+                    },
+                ],
             )
             print ('creating ' + str(count) + ' new instances')
         else:
