@@ -24,6 +24,7 @@ async function getLabels(video_path){
 
 function findAndProcessRequests(){
     if(num_processing>=MAX_PROCESSES){
+        console.log("Maximum number of subprocesses running");
         return;
     }else{
         num_processing++;
@@ -56,7 +57,10 @@ function findAndProcessRequests(){
                         }
 
                         // Add the results to SQS(videoname, uuid, labels)
-                        sqsh.addResults(video_path.split('videos/').join(''), uuid, formatted_labels);
+                        sqsh.addResults(video_path.split('videos/').join(''), uuid, formatted_labels, (err, data)=>{
+                            console.log("Results added to SQS");
+                            console.log(data);
+                        });
 
                         // Delete temp video
                         fs.unlink(video_path, (err)=>{

@@ -30,7 +30,7 @@ class VideoHandler{
             let file_stored_promise = new Promise((res, rej) => {
                 let local_file_path = `videos/${filename}`;
                 this.local_file = fs.createWriteStream(local_file_path);
-                response.pipe(this.local_file);
+                vid_res.pipe(this.local_file);
                 this.local_file.on('finish', ()=>{
                     this.local_file.close();
                     res(local_file_path);
