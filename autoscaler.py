@@ -118,9 +118,9 @@ class AutoScaler:
 
     def startInstances(self, count = 1):
         currentlyCreatingInstances = len(self.getInstances(states=['pending']))
-        if currentlyCreatingInstances != count:
+        if currentlyCreatingInstances < count:
             availableInstances = self.getInstances(states=['stopped'])
-            availableInstances = availableInstances[:count]
+            availableInstances = availableInstances[:count - currentlyCreatingInstances]
             if len(availableInstances) > 0:
                 self.ec2.instances.filter(InstanceIds = availableInstances).start()
             if count > len(availableInstances):
@@ -176,13 +176,13 @@ class AutoScaler:
             if mvMaxOfMessages > currentInstanceCount and currentInstanceCount < 20:
                 ## initCreate
                 instancesToCreate = mvMaxOfMessages - currentInstanceCount if mvMaxOfMessages - currentInstanceCount < 20 else 20
-                print ("initiating creation of " + str(instancesToCreate) + " instances")
+                print ("initiating creation/start of " + str(instancesToCreate) + " instances")
                 #self.createInstances(instancesToCreate)
                 self.startInstances(instancesToCreate)
             elif mvMaxOfMessages < currentInstanceCount and currentInstanceCount > 1:
                 ## initDelete
                 instancesToDelete = currentInstanceCount - mvMaxOfMessages
-                print ("initiating delete of " + str(instancesToDelete) + " instances")
+                print ("initiating delete/stop of " + str(instancesToDelete) + " instances")
                 #self.deleteInstances(instancesToDelete)
                 self.stopInstances(instancesToDelete)
             else:
@@ -194,7 +194,7 @@ class AutoScaler:
             time.sleep(self.timeSlotDuration)
 
 ## debug
-#a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0e355297545de2f82', timeSlotDuration=10)
+a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0e355297545de2f82', timeSlotDuration=10)
 
 ## PROD
-a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0de5566c453958f48', timeSlotDuration=60)
+#a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0de5566c453958f48', timeSlotDuration=60)
