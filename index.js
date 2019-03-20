@@ -9,9 +9,6 @@ const VideoHandler = require('./VideoHandler');
 const app = express();
 const port = 3000;
 
-const rpi_cluster_ip = '206.207.50.7';
-
-
 
 app.get('/', (req, res)=>{
     console.log("Putting a new request on the SQS");
