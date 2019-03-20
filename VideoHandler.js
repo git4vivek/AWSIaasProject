@@ -74,17 +74,17 @@ class VideoHandler{
 
     }
 
-    uploadResults(results){
+    uploadResults(video_name, results){
         let objectParams = {
             Bucket: BUCKET_NAME,
-            Key: this.video_name,
+            Key: video_name,
             Body: results
         };
 
         let s3promise = new AWS.S3().putObject(objectParams).promise();
         s3promise.then(
             (data)=>{
-                console.log(`Uploaded the results for the video ${this.video_name} in the S3 bucket ${BUCKET_NAME}`);
+                console.log(`Uploaded the results for the video ${video_name} in the S3 bucket ${BUCKET_NAME}`);
             }
         ).catch(
             (err)=>{

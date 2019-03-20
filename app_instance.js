@@ -18,6 +18,7 @@ async function getLabels(video_path){
         video_path +
         '  -dont_show');
 
+    console.log(stdout);
     console.log(stderr);
     return stdout;
 }
@@ -61,6 +62,8 @@ function findAndProcessRequests(){
                             console.log("Results added to SQS");
                             console.log(data);
                         });
+
+                        vh.uploadResults(video_path, formatted_labels);
 
                         // Delete temp video
                         fs.unlink(video_path, (err)=>{
