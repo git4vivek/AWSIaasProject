@@ -114,7 +114,25 @@ class AutoScaler:
             print ('creating ' + str(count) + ' new instances')
         else:
             print (str(count) + ' instances already started init')
-    
+
+
+    def startInstances(self, count = 1):
+        currentlyCreatingInstances = len(self.getInstances(states=['pending']))
+        if currentlyCreatingInstances != count:
+            availableInstances = self.getInstances(states=['stopped'])
+            availableInstances = availableInstances[:count]
+            if len(availableInstances) > 0:
+                self.ec2.instances.filter(InstanceIds = availableInstances).start()
+            if count > len(availableInstances):
+                createCount = count - len(availableInstances) if count - len(availableInstances) < 20 else 20
+                self.createInstances(createCount)
+
+    def stopInstances(self, count = 1):
+        currentlyDeletingInstances = len(self.getInstances(states=['stopping']))
+        if currentlyDeletingInstances != count:
+            runningInstances = self.getInstances(states=['running'])
+            runningInstances = runningInstances[:count]
+            self.ec2.instances.filter(InstanceIds = runningInstances).stop()
 
 
     def getInstancesToDelete(self):
@@ -122,8 +140,9 @@ class AutoScaler:
         ## return instances not in DontDeleteQ
 
         ## response from DontDeleteQ
-        activeInstances = self.getmessagesfromSQS(10)
-        print("busy instances that will not be deleted: ", activeInstances)
+        activeInstances = []
+        # activeInstances = self.getmessagesfromSQS(10)
+        # print("busy instances that will not be deleted: ", activeInstances)
 
         ## debug code until implemented
         if self.currentInstances == None:
@@ -158,12 +177,14 @@ class AutoScaler:
                 ## initCreate
                 instancesToCreate = mvMaxOfMessages - currentInstanceCount if mvMaxOfMessages - currentInstanceCount < 20 else 20
                 print ("initiating creation of " + str(instancesToCreate) + " instances")
-                self.createInstances(instancesToCreate)
+                #self.createInstances(instancesToCreate)
+                self.startInstances(instancesToCreate)
             elif mvMaxOfMessages < currentInstanceCount and currentInstanceCount > 1:
                 ## initDelete
                 instancesToDelete = currentInstanceCount - mvMaxOfMessages
                 print ("initiating delete of " + str(instancesToDelete) + " instances")
-                self.deleteInstances(instancesToDelete)
+                #self.deleteInstances(instancesToDelete)
+                self.stopInstances(instancesToDelete)
             else:
                 ## do nothing
                 print ("do nothing")
@@ -172,5 +193,8 @@ class AutoScaler:
             print ('')
             time.sleep(self.timeSlotDuration)
 
+## debug
+#a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0e355297545de2f82', timeSlotDuration=10)
 
-a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0e355297545de2f82', timeSlotDuration=10)
+## PROD
+a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0de5566c453958f48', timeSlotDuration=60)
