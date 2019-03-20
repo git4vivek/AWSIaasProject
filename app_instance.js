@@ -47,12 +47,12 @@ function findAndProcessRequests(){
                     raw_output.then((ro)=>{
                         // Processing of input is done
                         let formatted_labels = _.uniq(
-                            raw_output.toString().split("\n")
+                            ro.toString().split("\n")
                                 .filter((line) => line.indexOf('%') !== -1)
                                 .map((item) => item.split(':')[0])
                         ).join();
 
-                        if (raw_output.toString().split("\n")
+                        if (ro.toString().split("\n")
                             .filter((line) => line.indexOf('%') !== -1).length === 0) {
                             formatted_labels = "No item is detected";
                         }
@@ -63,7 +63,7 @@ function findAndProcessRequests(){
                             console.log(data);
                         });
 
-                        vh.uploadResults(video_path, formatted_labels);
+                        vh.uploadResults(video_path.split('videos/').join(''), formatted_labels);
 
                         // Delete temp video
                         fs.unlink(video_path, (err)=>{
