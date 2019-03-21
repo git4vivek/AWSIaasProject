@@ -97,7 +97,7 @@ class AutoScaler:
             instance = self.ec2.create_instances(
                 ImageId = self.amiId,
                 InstanceType = 't2.micro',
-                MaxCount = count - currentlyCreatingInstances,
+                MaxCount = count - currentlyCreatingInstances if count - currentlyCreatingInstances > 1 else 1,
                 MinCount = 1,
                 TagSpecifications=[
                     {
