@@ -131,7 +131,7 @@ class AutoScaler:
         currentlyDeletingInstances = len(self.getInstances(states=['stopping']))
         if currentlyDeletingInstances != count:
             runningInstances = self.getInstances(states=['running'])
-            runningInstances = runningInstances[:count]
+            runningInstances = runningInstances[:count-1]
             self.ec2.instances.filter(InstanceIds = runningInstances).stop()
 
 
