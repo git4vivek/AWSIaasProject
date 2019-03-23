@@ -58,20 +58,20 @@ function findAndProcessRequests(){
                         }
 
                         // Add the results to SQS(videoname, uuid, labels)
-                        sqsh.addResults(video_path.split('videos/').join(''), uuid, formatted_labels, (err, data)=>{
+                        const vid_id = video_path.replace('videos/','');
+                        sqsh.addResults(vid_id, uuid, formatted_labels, (err, data)=>{
                             console.log("Results added to SQS");
                             console.log(data);
                         });
 
-                        vh.uploadResults(video_path.split('videos/').join(''), formatted_labels);
-
-                        // Delete temp video
-                        fs.unlink(video_path, (err)=>{
-                           if(err){
-                               console.log(err);
-                           }
+                        vh.uploadResults(vid_id, formatted_labels, ()=>{
+                            // Delete temp video
+                            fs.unlink(video_path, (err)=>{
+                                if(err){
+                                    console.log(err);
+                                }
+                            });
                         });
-
                     }).catch((err)=>{
                         console.log(err);
                     }).finally(()=>{
