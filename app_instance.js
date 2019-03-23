@@ -3,6 +3,7 @@ const SQSHandler = require('./SQSHandler');
 const VideoHandler = require('./VideoHandler');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
+const child_process = require('child_process');
 const _ = require('lodash');
 
 
@@ -10,11 +11,14 @@ const sqsh = new SQSHandler();
 
 const MAX_PROCESSES = 2;
 var num_processing = 0;
+let unused_ticks = 0;
+let is_shutting_down = false;
+let shutdown_timeout = 60;
 
 async function getLabels(video_path){
-    let {stdout, stderr} = await exec('cd ~/darknet/ && xvfb-run -a ./darknet detector demo ./cfg/coco.data ' +
+    let {stdout, stderr} = await exec('cd /home/ubuntu/darknet/ && xvfb-run -a ./darknet detector demo ./cfg/coco.data ' +
         './cfg/yolov3-tiny.cfg ./yolov3-tiny.weights ' +
-        '../CSE546Project1/' +
+        '/root/CSE546Project1/' +
         video_path +
         '  -dont_show');
 
@@ -24,6 +28,16 @@ async function getLabels(video_path){
 }
 
 function findAndProcessRequests(){
+    if(is_shutting_down){
+        return
+    }
+
+    if(unused_ticks>shutdown_timeout){
+        child_process.execSync("poweroff");
+        is_shutting_down = true;
+        return;
+    }
+
     if(num_processing>=MAX_PROCESSES){
         console.log("Maximum number of subprocesses running");
         return;
@@ -33,6 +47,7 @@ function findAndProcessRequests(){
     // Look for things in SQS
     sqsh.getRequest((request_err, request_data)=>{
         if(!request_err){
+            unused_ticks = 0;
             let uuid = request_data;
             console.log(`Processing request with uid: ${uuid}`);
             // If request is found
@@ -83,6 +98,7 @@ function findAndProcessRequests(){
             })
         }else{
             num_processing--;
+            unused_ticks++;
         }
     })
 
