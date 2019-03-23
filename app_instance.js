@@ -33,8 +33,10 @@ function findAndProcessRequests(){
     }
 
     if(unused_ticks>shutdown_timeout){
-        child_process.execSync("poweroff");
-        is_shutting_down = true;
+        if(num_processing===0) {
+            child_process.execSync("poweroff");
+            is_shutting_down = true;
+        }
         return;
     }
 
