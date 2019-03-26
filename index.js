@@ -15,7 +15,7 @@ app.get('/', (req, res)=>{
     let sqsh = new SQSHandler();
 
     sqsh.createRequest().then(
-        (data)=>{
+        ()=>{
             sqsh.getResult((err, result)=>{
                 if(err){
                     console.log(err);
@@ -23,8 +23,6 @@ app.get('/', (req, res)=>{
                 }else {
                     res.send(`${result['video']},${result['label']}`);
                     console.log(`Result: ${result}`);
-                    //let vh = new VideoHandler(result['video'], null);
-                    //vh.uploadResults(result['label']);
                 }
             });
         }

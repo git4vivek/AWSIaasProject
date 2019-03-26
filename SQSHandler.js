@@ -25,14 +25,14 @@ class SQSHandler{
             ],
         };
 
-	if(rec_jobs.indexOf(this.job_uuid)!=-1){
-		return false;
-	}
-
         return new Promise((res, rej)=>{
-		if(rec_jobs.indexOf(this.job_uuid)!=-1){
-			res();
-		}
+            if(rec_jobs.indexOf(this.job_uuid)!==-1){
+                res();
+                return false;
+            }
+
+            let job_found = false;
+
             sqs.receiveMessage(sqs_params, (err, data) => {
                 if(err){
                     console.log('Failed to receive sqs message');
@@ -42,7 +42,8 @@ class SQSHandler{
                         rej('No messages');
                         return;
                     }
-                    data['Messages'].forEach((message)=>{
+                    for(let  i=0; i<data['Messages'].length; i++){
+                        let message = data['Messages'][i];
                         try {
                             let rekMessage = JSON.parse(message['Body']);
                             console.log(rekMessage['uuid']);
@@ -50,31 +51,38 @@ class SQSHandler{
                             if (rekMessage['uuid'] === this.job_uuid) {
                                 console.log('Matching Job Found: ' + this.job_uuid);
 
-				res(rekMessage);
+                                res(rekMessage);
                                 sqs.deleteMessage({
                                     QueueUrl: RESPONSE_QUEUE_URL,
                                     ReceiptHandle: message['ReceiptHandle']
                                 });
-
+                                job_found = true;
+                                break;
                                 // res(rekMessage);
                             } else {
                                 rej('wrong job id');
                                 //console.log(`Job did't match: ${rekMessage['uuid']}:${this.job_uuid}`);
                             }
 
-			    if(rec_jobs.indexOf(this.job_uuid)!=-1){
-                            	sqs.deleteMessage({
-                            	    QueueUrl: RESPONSE_QUEUE_URL,
-                            	    ReceiptHandle: message['ReceiptHandle']
-                            	});
+                            if(rec_jobs.indexOf(this.job_uuid)!==-1){
+                                sqs.deleteMessage({
+                                    QueueUrl: RESPONSE_QUEUE_URL,
+                                    ReceiptHandle: message['ReceiptHandle']
+                                });
                             }
                         }catch (e) {
                             //console.log('Read irrelevant message');
-                            rej(e);
+                            //rej(e);
+
                         }
-                    })
+
+                    }
                 }
             });
+
+            if(!job_found){
+                rej();
+            }
 
         });
 
@@ -110,7 +118,7 @@ class SQSHandler{
         });
 
         poller.then((result)=>{
-	    rec_jobs.push(this.job_uuid);
+	        rec_jobs.push(this.job_uuid);
             cb(null, result);
         }).catch((err)=>{
             cb(err, null);
