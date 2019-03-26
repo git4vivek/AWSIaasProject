@@ -13,7 +13,7 @@ class AutoScaler:
         self.timeSlotDuration = timeSlotDuration #seconds
         self.region = region
 
-        self.slots = deque([0, 0, 0, 0, 0])
+        self.slots = deque([0, 0, 0])
         
         self.sqs = boto3.client('sqs', region_name=region)
         self.ec2 = boto3.resource('ec2', region_name=region)
@@ -144,4 +144,4 @@ class AutoScaler:
 #a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0de5566c453958f48', timeSlotDuration=10)
 
 ## PROD
-a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', amiId = 'ami-0f2a3969a45cb9007', timeSlotDuration=30)
+a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', amiId = 'ami-012e6a3acf8189d18', timeSlotDuration=30)
