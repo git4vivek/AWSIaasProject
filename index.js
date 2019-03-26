@@ -23,8 +23,8 @@ app.get('/', (req, res)=>{
                 }else {
                     res.send(result['label']);
                     console.log(`Result: ${result}`);
-                    let vh = new VideoHandler(result['video'], null);
-                    vh.uploadResults(result['label']);
+                    //let vh = new VideoHandler(result['video'], null);
+                    //vh.uploadResults(result['label']);
                 }
             });
         }

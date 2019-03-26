@@ -81,6 +81,7 @@ class AutoScaler:
                         ]
                     },
                 ],
+		KeyName='keypairweb1'
             )
             print ('creating ' + str(count) + ' new instances')
         else:
@@ -143,4 +144,4 @@ class AutoScaler:
 #a = AutoScaler(inputQueueUrl = 'https://us-west-1.queue.amazonaws.com/079683809430/scaler-test-q-1', dontDeleteQueueUrl = 'https://sqs.us-west-1.amazonaws.com/079683809430/scaler-dontdeleteq-2.fifo', amiId = 'ami-0de5566c453958f48', timeSlotDuration=10)
 
 ## PROD
-a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', amiId = 'ami-0c795c0bdb476da53', timeSlotDuration=60)
+a = AutoScaler(inputQueueUrl = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue', amiId = 'ami-0f2a3969a45cb9007', timeSlotDuration=30)
