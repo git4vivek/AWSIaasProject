@@ -21,7 +21,7 @@ app.get('/', (req, res)=>{
                     console.log(err);
                     res.send("Error: Failed Getting results");
                 }else {
-                    res.send(result['label']);
+                    res.send(`${result['video']},${result['label']}`);
                     console.log(`Result: ${result}`);
                     //let vh = new VideoHandler(result['video'], null);
                     //vh.uploadResults(result['label']);
@@ -37,8 +37,10 @@ app.get('/', (req, res)=>{
     );
 });
 
-app.listen(port, ()=>{
+let server = app.listen(port, ()=>{
     VideoHandler.printHello();
 
     console.log(`Started server at port ${port}`);
 });
+
+server.timeout = 99999999;

@@ -12,6 +12,7 @@ class AutoScaler:
         self.amiId = amiId # 'ami-0e355297545de2f82'
         self.timeSlotDuration = timeSlotDuration #seconds
         self.region = region
+        self.MAX_INSTANCES = 18
 
         self.slots = deque([0, 0, 0])
         
@@ -96,8 +97,11 @@ class AutoScaler:
             if len(availableInstances) > 0:
                 self.ec2.instances.filter(InstanceIds = availableInstances).start()
             if count > len(availableInstances):
-                createCount = count - len(availableInstances) if count - len(availableInstances) < 20 else 20
-                self.createInstances(createCount)
+                try:
+                    createCount = count - len(availableInstances) if count - len(availableInstances) < self.MAX_INSTANCES else self.MAX_INSTANCES
+                    self.createInstances(createCount)
+                except:
+                    print ('max limit reached error, total 20 now')
 
     def stopInstances(self, count = 1):
         currentlyDeletingInstances = len(self.getInstances(states=['stopping']))

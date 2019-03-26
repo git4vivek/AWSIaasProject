@@ -93,8 +93,8 @@ class SQSHandler{
     getResult(cb){
         let poller = promisePoller({
             taskFn: this.waitForJobFinish.bind(this),
-            interval: 1000, // milliseconds
-            retries: 200
+            interval: 5000, // milliseconds
+            retries: 1000
         });
 
         poller.then((result)=>{
