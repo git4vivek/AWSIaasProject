@@ -6,6 +6,8 @@ const _ = require('lodash');
 const REQUEST_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/696521643480/RequestQueue';
 const RESPONSE_QUEUE_URL = 'https://sqs.us-west-1.amazonaws.com/696521643480/ResponseQueue';
 
+let rec_jobs=[];
+
 class SQSHandler{
     constructor(){
         this.sqs = new AWS.SQS({region: 'us-west-1'});
@@ -23,7 +25,14 @@ class SQSHandler{
             ],
         };
 
+	if(rec_jobs.indexOf(this.job_uuid)!=-1){
+		return false;
+	}
+
         return new Promise((res, rej)=>{
+		if(rec_jobs.indexOf(this.job_uuid)!=-1){
+			res();
+		}
             sqs.receiveMessage(sqs_params, (err, data) => {
                 if(err){
                     console.log('Failed to receive sqs message');
@@ -41,21 +50,24 @@ class SQSHandler{
                             if (rekMessage['uuid'] === this.job_uuid) {
                                 console.log('Matching Job Found: ' + this.job_uuid);
 
+				res(rekMessage);
                                 sqs.deleteMessage({
                                     QueueUrl: RESPONSE_QUEUE_URL,
                                     ReceiptHandle: message['ReceiptHandle']
                                 });
 
-                                res(rekMessage);
+                                // res(rekMessage);
                             } else {
                                 rej('wrong job id');
-                                console.log(`Job did't match: ${rekMessage['JobId']}:${this.job_uuid}`);
+                                //console.log(`Job did't match: ${rekMessage['uuid']}:${this.job_uuid}`);
                             }
 
-                            sqs.deleteMessage({
-                                QueueUrl: RESPONSE_QUEUE_URL,
-                                ReceiptHandle: message['ReceiptHandle']
-                            });
+			    if(rec_jobs.indexOf(this.job_uuid)!=-1){
+                            	sqs.deleteMessage({
+                            	    QueueUrl: RESPONSE_QUEUE_URL,
+                            	    ReceiptHandle: message['ReceiptHandle']
+                            	});
+                            }
                         }catch (e) {
                             //console.log('Read irrelevant message');
                             rej(e);
@@ -94,10 +106,11 @@ class SQSHandler{
         let poller = promisePoller({
             taskFn: this.waitForJobFinish.bind(this),
             interval: 5000, // milliseconds
-            retries: 1000
+            retries: 2000
         });
 
         poller.then((result)=>{
+	    rec_jobs.push(this.job_uuid);
             cb(null, result);
         }).catch((err)=>{
             cb(err, null);
