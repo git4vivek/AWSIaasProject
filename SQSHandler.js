@@ -33,55 +33,45 @@ class SQSHandler{
 
             let job_found = false;
 
-            sqs.receiveMessage(sqs_params, (err, data) => {
-                console.log("REC MESSAGE REQUEST");
+            sqs.receiveMessage(sqs_params, (err, data)=>{
                 if(err){
-                    console.log('Failed to receive sqs message');
+                    console.log(err);
                     rej(err);
                 }else{
                     if(_.isNil(data['Messages'])){
                         rej('No messages');
-                        return;
-                    }
-                    for(let  i=0; i<data['Messages'].length; i++){
-                        let message = data['Messages'][i];
-                        try {
-                            let rekMessage = JSON.parse(message['Body']);
-                            console.log(rekMessage['uuid']);
-                            console.log(rekMessage['label']);
-                            if (rekMessage['uuid'] === this.job_uuid) {
-                                console.log('Matching Job Found: ' + this.job_uuid);
+                    }else{
+                        for(let i=0;i<data['Messages'].length;i++){
+                            let message = data['Messages'][i];
+                            try {
+                                let rekMessage = JSON.parse(message['Body']);
+                                console.log(rekMessage['uuid']);
+                                console.log(rekMessage['label']);
+                                if (rekMessage['uuid'] === this.job_uuid) {
+                                    console.log('Matching Job Found: ' + this.job_uuid);
 
-                                res(rekMessage);
-                                sqs.deleteMessage({
-                                    QueueUrl: RESPONSE_QUEUE_URL,
-                                    ReceiptHandle: message['ReceiptHandle']
-                                });
-                                job_found = true;
-                                console.log("JOB FOUND");
-                                break;
-                                // res(rekMessage);
-                            } else {
-                                rej('wrong job id');
-                                //console.log(`Job did't match: ${rekMessage['uuid']}:${this.job_uuid}`);
+                                    res(rekMessage);
+                                    sqs.deleteMessage({
+                                        QueueUrl: RESPONSE_QUEUE_URL,
+                                        ReceiptHandle: message['ReceiptHandle']
+                                    });
+                                    break;
+
+                                    // res(rekMessage);
+                                } else {
+                                    rej('wrong job id');
+                                    //console.log(`Job did't match: ${rekMessage['uuid']}:${this.job_uuid}`);
+                                }
+                            }catch (e) {
+                                //console.log('Read irrelevant message');
+                                rej(e);
+                                console.log(e);
                             }
-
-                            if(rec_jobs.indexOf(this.job_uuid)!==-1){
-                                sqs.deleteMessage({
-                                    QueueUrl: RESPONSE_QUEUE_URL,
-                                    ReceiptHandle: message['ReceiptHandle']
-                                });
-                            }
-                        }catch (e) {
-                            console.log(e);
-                            //console.log('Read irrelevant message');
-                            //rej(e);
-
                         }
-
                     }
                 }
-            });
+                }
+            )
 
         });
 
