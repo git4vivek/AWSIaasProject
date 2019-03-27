@@ -34,6 +34,7 @@ class SQSHandler{
             let job_found = false;
 
             sqs.receiveMessage(sqs_params, (err, data) => {
+                console.log("REC MESSAGE REQUEST");
                 if(err){
                     console.log('Failed to receive sqs message');
                     rej(err);
@@ -57,6 +58,7 @@ class SQSHandler{
                                     ReceiptHandle: message['ReceiptHandle']
                                 });
                                 job_found = true;
+                                console.log("JOB FOUND");
                                 break;
                                 // res(rekMessage);
                             } else {
@@ -71,6 +73,7 @@ class SQSHandler{
                                 });
                             }
                         }catch (e) {
+                            console.log(e);
                             //console.log('Read irrelevant message');
                             //rej(e);
 
