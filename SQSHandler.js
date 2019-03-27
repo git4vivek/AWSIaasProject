@@ -83,10 +83,6 @@ class SQSHandler{
                 }
             });
 
-            if(!job_found){
-                rej();
-            }
-
         });
 
     }
