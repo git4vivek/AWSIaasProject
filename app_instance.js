@@ -25,7 +25,7 @@ async function getLabels(video_path){
 
 function findAndProcessRequests(){
     if(num_processing>=MAX_PROCESSES){
-        console.log("Maximum number of subprocesses running");
+        console.log("Maximum number of subprocesses running, CPU busy !!");
         return;
     }else{
         num_processing++;

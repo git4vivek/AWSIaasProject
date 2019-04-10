@@ -54,8 +54,8 @@ class AutoScaler:
             MessageAttributeNames=[
                 'All'
             ],
-            VisibilityTimeout = 0,
-            WaitTimeSeconds = 0
+            VisibilityTimeout = 1,
+            WaitTimeSeconds = 1
         )
 
         for message in message_bodies['Messages']:
@@ -190,7 +190,7 @@ class AutoScaler:
                 print ("do nothing")
 
             print ('Waiting for ' + str(self.timeSlotDuration) + ' seconds')
-            print ('')
+            print ('Wait Ended')
             time.sleep(self.timeSlotDuration)
 
 ## debug
